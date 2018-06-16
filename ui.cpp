@@ -10,6 +10,38 @@ void UI::updatePanels() {
     doupdate();
 }
 
+/*
+ * TEXT_COLORS[Colors::WHITE] = COLOR_PAIR(1);
+    TEXT_COLORS[Colors::BLUE] = COLOR_PAIR(2);
+    TEXT_COLORS[Colors::RED] = COLOR_PAIR(3);
+    TEXT_COLORS[Colors::GREEN] = COLOR_PAIR(4);
+    TEXT_COLORS[Colors::YELLOW] = COLOR_PAIR(5);
+    TEXT_COLORS[Colors::INVERT] = COLOR_PAIR(6);
+    TEXT_COLORS[Colors::GRAY] = COLOR_PAIR(11);
+ */
+
+// Return a curses color pair for a specified color
+unsigned int UI::getColorPair(Colors color) {
+    switch (color) {
+        case Colors::WILD:
+        case Colors::DEFAULT:
+        case Colors::WHITE:
+            return COLOR_PAIR(1);
+        case Colors::BLUE:
+            return COLOR_PAIR(2);
+        case Colors::RED:
+            return COLOR_PAIR(3);
+        case Colors::GREEN:
+            return COLOR_PAIR(4);
+        case Colors::YELLOW:
+            return COLOR_PAIR(5);
+        case Colors::INVERT:
+            return COLOR_PAIR(6);
+        case Colors::GRAY:
+            return COLOR_PAIR(11);
+    }
+}
+
 
 ButtonUpdate::ButtonUpdate(Elements element, int start, int length, const char *label, bool active, Colors color, bool startAtZero)
 : element(element), start(start), length(length), label(label), active(active), color(color), startAtZero(startAtZero) {
@@ -57,11 +89,12 @@ Element::~Element()
     delwin(window);
 }
 
+
 void UI::colorElement(const Elements element, const Colors color) {
     WINDOW* window = el[element]->window;
     unsigned int colorVal;
     if (color == Colors::DEFAULT) colorVal = el[element]->defaultColor;
-    else colorVal = TEXT_COLORS[color];
+    else colorVal = getColorPair(color);
 
     // Color the Window
     wbkgd(window, colorVal);
@@ -70,11 +103,31 @@ void UI::colorElement(const Elements element, const Colors color) {
 
 }
 
+void UI::console(const char * text) {
+    this->printToConsole(text, Colors::YELLOW);
+}
+
+void UI::consoleMode(const char * text) {
+    this->printToConsole(text, Colors::YELLOW);
+}
+
+void UI::printToConsole(const char * text, Colors color) {
+    std::string whitespace = std::string((unsigned long)68, ' ');
+    this->putText(Elements::TITLE, 1, 5, whitespace.c_str(), color);
+    this->putText(Elements::TITLE, 1, 5, text, color);
+}
+
+void UI::printToModeConsole(const char * text, Colors color) {
+    std::string whitespace = std::string((unsigned long)34, ' ');
+    this->putText(Elements::WINDOW_MODE, 1, 6, whitespace.c_str(), color);
+    this->putText(Elements::WINDOW_MODE, 1, 6, text, color);
+}
+
 void UI::putChar(Elements element, int x, int y, const char character, Colors color) {
     WINDOW* window = this->el[element]->window;
     unsigned int colorVal;
     if (color != Colors::DEFAULT)
-        colorVal = this->TEXT_COLORS[color];
+        colorVal = this->getColorPair(color);
     else
         colorVal = this->el[element]->defaultColor;
     wattr_on(window, colorVal, nullptr);
@@ -88,7 +141,7 @@ void UI::putSpecialChar(Elements element, int x, int y, const chtype character, 
     WINDOW* window = this->el[element]->window;
     unsigned int colorVal;
     if (color != Colors::DEFAULT)
-        colorVal = this->TEXT_COLORS[color];
+        colorVal = this->getColorPair(color);
     else
         colorVal = this->el[element]->defaultColor;
     wattron(window, colorVal);
@@ -101,7 +154,7 @@ void UI::putText(const Elements element, const int x, const int y, const char* t
     WINDOW* window = this->el[element]->window;
     unsigned int colorVal;
     if (color != Colors::DEFAULT)
-        colorVal = this->TEXT_COLORS[color];
+        colorVal = this->getColorPair(color);
     else
         colorVal = this->el[element]->defaultColor;
     wattron(window, colorVal);
@@ -133,8 +186,16 @@ void UI::updateButtons(ButtonUpdate *data, int length){
 
 }
 
-void UI::Run()
+void UI::run()
 {
     getch();
     //beep();
+}
+
+void UI::warning(const char * text) {
+    this->printToConsole(text, Colors::RED);
+}
+
+void UI::warningMode(const char * text){
+    this->printToModeConsole(text, Colors::RED);
 }

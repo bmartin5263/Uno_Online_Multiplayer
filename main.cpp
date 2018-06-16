@@ -7,6 +7,7 @@
 
 int main()
 {
-    UI u;
-    u.Run();
+    UI* u = new UI();
+    u->run();
+    delete u;
 }
