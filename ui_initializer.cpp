@@ -8,10 +8,131 @@
 
 #include "ui.h"
 
+/* First We Will Initialize Canvases */
+
+Canvas::Canvas(int x, int y, int cols, int rows, unsigned int colorPair, Borders border) :
+    x(x), y(y), cols(cols), rows(rows), defaultColor(colorPair)
+{
+    // The literal canvas
+    window = newwin(rows, cols, y, x);
+    panel = new_panel(window);
+
+    // Give it a basic border, if needed
+    if (border != Borders::NONE)
+        box(window, 0, 0);
+
+    // Adjust the border based on position
+    switch (border) {
+        case Borders::TOP:
+            mvwaddch(window, rows-1, 0, ACS_LTEE);
+            mvwaddch(window, rows-1, cols-1, ACS_RTEE);
+            break;
+        case Borders::BOTTOM:
+            mvwaddch(window, 0, 0, ACS_LTEE);
+            mvwaddch(window, 0, cols-1, ACS_RTEE);
+            break;
+        case Borders::MIDDLE:
+            mvwaddch(window, 0, 0, ACS_LTEE);
+            mvwaddch(window, 0, cols-1, ACS_RTEE);
+            mvwaddch(window, rows-1, 0, ACS_LTEE);
+            mvwaddch(window, rows-1, cols-1, ACS_RTEE);
+            break;
+        case Borders::NONE:
+        case Borders::FLOAT:        // Just a box, does not connect to another
+            break;
+    }
+
+    wbkgd(window, defaultColor);
+    wnoutrefresh(window);
+}
+
+// Bake a row onto the window. Cannot change.
+void Canvas::drawRow(int y) {
+    mvwaddch(window, y, 0, ACS_LTEE);
+    mvwaddch(window, y, cols-1, ACS_RTEE);
+    for (int i = 1 ; i < cols-1 ; i++) {
+        mvwaddch(window, y, i, ACS_HLINE);
+    }
+    wnoutrefresh(window);
+}
+
+// Bake a box onto the window. Cannot change.
+void Canvas::drawBox(int x, int y, int cols, int rows) {
+    mvwaddch(window, y, x, ACS_ULCORNER);
+    mvwaddch(window, y, x+cols-1, ACS_URCORNER);
+    mvwaddch(window, y+rows-1, x, ACS_LLCORNER);
+    mvwaddch(window, y+rows-1, x+cols-1, ACS_LRCORNER);
+    for (int i = y+1; i < y+rows-1; i++) {
+        mvwaddch(window, i, x, ACS_VLINE);
+        mvwaddch(window, i, x+cols-1, ACS_VLINE);
+    }
+    for (int i = x+1; i < x+cols-1; i++) {
+        mvwaddch(window, y, i, ACS_HLINE);
+        mvwaddch(window, y+rows-1, i, ACS_HLINE);
+    }
+    wnoutrefresh(window);
+}
+
+// Bake text onto the window. Cannot change.
+void Canvas::drawText(int x, int y, const char *text) {
+    mvwaddstr(window, y, x, text);
+    wnoutrefresh(window);
+}
+
+Canvas::~Canvas() {
+    // Delete the Window and Panel
+    del_panel(panel);
+    delwin(window);
+}
+
+/* Second We Initialize the Elements */
+
+/* Finally, the UI */
+
 UI::UI()
 {
     initializeCurses();
-    initializeElements();
+    initializeCanvases();
+    //initializeElements();
+}
+
+void UI::initializeCanvases() {
+    // Canvas(xPos, yPos, cols, rows, color, borderType)
+    C_TITLE =       new Canvas(0, 0, 70, 5, getColorPair(Colors::WHITE), Borders::TOP);
+    C_CONSOLE =     new Canvas(0, 4, 70, 3, getColorPair(Colors::WHITE), Borders::MIDDLE);
+    C_LOBBY =       new Canvas(0, 6, 70, 26, getColorPair(Colors::WHITE), Borders::BOTTOM);
+    C_SETTINGS =    new Canvas(35, 16, 34, 15, getColorPair(Colors::WHITE), Borders::FLOAT);
+    C_CONTROLS =    new Canvas(0, 32, 70, 1, getColorPair(Colors::INVERT), Borders::NONE);
+    C_MODE =        new Canvas(17, 7, 36, 21, getColorPair(Colors::WHITE), Borders::FLOAT);
+    C_MATCH =       new Canvas(0, 6, 70, 26, getColorPair(Colors::WHITE), Borders::BOTTOM);
+
+    /* Bake On Unchanging Elements */
+    C_LOBBY->drawRow(9);
+    C_SETTINGS->drawRow(2);
+    C_SETTINGS->drawText(13, 1, "Settings");
+    C_MATCH->drawRow(17);
+    C_MATCH->drawRow(19);
+    C_MATCH->drawText(1, 2, "Deck:");
+    C_MATCH->drawBox(2, 5, 5, 11);
+
+    hide_panel(C_TITLE->panel);
+    hide_panel(C_CONSOLE->panel);
+    hide_panel(C_LOBBY->panel);
+    hide_panel(C_SETTINGS->panel);
+    hide_panel(C_MODE->panel);
+    hide_panel(C_MATCH->panel);
+
+    update_panels();
+    getch();
+
+    show_panel(C_TITLE->panel);
+    show_panel(C_CONSOLE->panel);
+    show_panel(C_LOBBY->panel);
+    show_panel(C_SETTINGS->panel);
+
+    update_panels();
+
+    doupdate();
 }
 
 /*
@@ -40,12 +161,14 @@ void UI::initializeCurses()
     keypad(stdscr, TRUE);
     noecho();
 
-    box(stdscr, 0, 0);      // Create a Box around the entire Terminal
+    box(stdscr, 0, 0);
+    bkgd(getColorPair(Colors::GRAY));
     refresh();
 }
 /*
  * Initialize all UI elements (structs containing window, panel, and spatial information) for use in Uno.
  */
+/*
 void UI::initializeElements()
 {
     // Create Elements with Default Values
@@ -155,21 +278,21 @@ void UI::initializeElements()
 
     // Initialize Button Text
     int updateSize = 14;
-    ButtonUpdate data[14] = {
-            ButtonUpdate(Elements::BUTTON_START, 11, 32, "Start Game", false, Colors::DEFAULT, false),
-            ButtonUpdate(Elements::BUTTON_ADD_AI, 5, 15, "Add AI", false, Colors::DEFAULT, false),
-            ButtonUpdate(Elements::BUTTON_SEARCH, 4, 15, "Search", false, Colors::DEFAULT, false),
-            ButtonUpdate(Elements::BUTTON_KICK, 11, 32, "Kick Player", false, Colors::DEFAULT, false),
-            ButtonUpdate(Elements::BUTTON_CLOSE, 11, 32, "Close Room", false, Colors::DEFAULT, false),
-            ButtonUpdate(Elements::BUTTON_SETTINGS, 12, 32, "Settings", false, Colors::DEFAULT, false),
-            ButtonUpdate(Elements::BUTTON_HOST, 8, 32, "Host Multiplayer", false, Colors::DEFAULT, false),
-            ButtonUpdate(Elements::BUTTON_JOIN, 8, 32, "Join Multiplayer", false, Colors::DEFAULT, false),
-            ButtonUpdate(Elements::BUTTON_LOCAL, 7, 32, "Local Singleplayer", false, Colors::DEFAULT, false),
-            ButtonUpdate(Elements::BUTTON_EXIT, 14, 32, "Exit", false, Colors::DEFAULT, false),
-            ButtonUpdate(Elements::BUTTON_DISPLAY_EFFECTS, 0, 32, "- Display Effects", false, Colors::DEFAULT, true),
-            ButtonUpdate(Elements::BUTTON_COMPUTER_SPEED, 0, 32, "- Computer Speed", false, Colors::DEFAULT, true),
-            ButtonUpdate(Elements::BUTTON_SHOW_HANDS, 0, 32, "- Show Computer Hands", false, Colors::DEFAULT, true),
-            ButtonUpdate(Elements::BUTTON_DOES_NOTHING, 0, 32, "- Does Nothing", false, Colors::DEFAULT, true),
+    ElementUpdate data[14] = {
+            ElementUpdate(Elements::BUTTON_START, 11, 32, "Start Game", false, Colors::DEFAULT, false),
+            ElementUpdate(Elements::BUTTON_ADD_AI, 5, 15, "Add AI", false, Colors::DEFAULT, false),
+            ElementUpdate(Elements::BUTTON_SEARCH, 4, 15, "Search", false, Colors::DEFAULT, false),
+            ElementUpdate(Elements::BUTTON_KICK, 11, 32, "Kick Player", false, Colors::DEFAULT, false),
+            ElementUpdate(Elements::BUTTON_CLOSE, 11, 32, "Close Room", false, Colors::DEFAULT, false),
+            ElementUpdate(Elements::BUTTON_SETTINGS, 12, 32, "Settings", false, Colors::DEFAULT, false),
+            ElementUpdate(Elements::BUTTON_HOST, 8, 32, "Host Multiplayer", false, Colors::DEFAULT, false),
+            ElementUpdate(Elements::BUTTON_JOIN, 8, 32, "Join Multiplayer", false, Colors::DEFAULT, false),
+            ElementUpdate(Elements::BUTTON_LOCAL, 7, 32, "Local Singleplayer", false, Colors::DEFAULT, false),
+            ElementUpdate(Elements::BUTTON_EXIT, 14, 32, "Exit", false, Colors::DEFAULT, false),
+            ElementUpdate(Elements::BUTTON_DISPLAY_EFFECTS, 0, 32, "- Display Effects", false, Colors::DEFAULT, true),
+            ElementUpdate(Elements::BUTTON_COMPUTER_SPEED, 0, 32, "- Computer Speed", false, Colors::DEFAULT, true),
+            ElementUpdate(Elements::BUTTON_SHOW_HANDS, 0, 32, "- Show Computer Hands", false, Colors::DEFAULT, true),
+            ElementUpdate(Elements::BUTTON_DOES_NOTHING, 0, 32, "- Does Nothing", false, Colors::DEFAULT, true),
     };
     updateButtons(data, updateSize);
 
@@ -184,15 +307,24 @@ void UI::initializeElements()
     updatePanels();
 
 }
+*/
+
+
 
 /*
- *  Delete all elements stored in the UI
+ *  Delete all canvases and elements stored in the UI
+ *  one by one...
  */
 UI::~UI()
 {
-    for (auto it=el.begin(); it!=el.end(); it++)
-        delete it->second;
 
-    // End Curses
+    /* Delete Canvases */
+    //delete C_TITLE;
+    //delete C_CONSOLE;
+    //delete C_MODE;
+    //delete C_LOBBY;
+    //delete C_MATCH;
+    //delete C_SETTINGS;
+
     endwin();
 }
