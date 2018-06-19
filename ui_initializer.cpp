@@ -7,6 +7,8 @@
  */
 
 #include "ui.h"
+#include "cstring"
+#include "assert.h"
 
 /* First We Will Initialize Canvases */
 
@@ -85,54 +87,308 @@ Canvas::~Canvas() {
     delwin(window);
 }
 
-/* Second We Initialize the Elements */
+AbstractElement::AbstractElement(const Canvas *defaultCanvas, int x, int y, int length, int height) :
+    canvas(defaultCanvas), x(x), y(y), length(length), height(height)
+{
+}
 
-/* Finally, the UI */
+AbstractElement::~AbstractElement() {
+    // Nothing
+}
+
+void AbstractElement::move(int newX, int newY) {
+    this->x = newX;
+    this->y = newY;
+}
+
+void AbstractElement::setCanvas(const Canvas * defaultCanvas) {
+    this->canvas = defaultCanvas;
+}
+
+Element_1D::Element_1D(const Canvas *defaultCanvas, int x, int y, int length, int defaultAttribute) :
+    AbstractElement(defaultCanvas, x, y, length, 1), defaultAttribute(defaultAttribute), attr(-1)
+{
+    body = new char[length+1];
+}
+
+// Clear the body and render the result
+void Element_1D::clearElement() {
+    memset(body, ' ', (size_t)length);
+    body[length] = '\0';
+    this->render();
+}
+
+// Draw element onto the default canvas
+void Element_1D::render() {
+    this->renderOnto(*canvas);
+}
+
+void Element_1D::renderV() {
+    this->renderOntoV(*canvas);
+}
+
+void Element_1D::renderOnto(const Canvas& canvas) {
+    assert(body != nullptr);
+    WINDOW* window = canvas.window;
+    if (attr >= 0)
+        wattron(window, attr);
+    else
+        wattron(window, defaultAttribute);
+    mvwprintw(window, y, x, body);
+    if (attr >= 0)
+        wattroff(window, attr);
+    else
+        wattroff(window, defaultAttribute);
+    wnoutrefresh(canvas.window);
+}
+
+void Element_1D::renderOntoV(const Canvas& canvas) {
+    assert(body != nullptr);
+    WINDOW* window = canvas.window;
+    if (attr >= 0)
+        wattron(window, attr);
+    else
+        wattron(window, defaultAttribute);
+    for (int i = 0; i < length; i++) {
+        mvwaddch(window, y+i, x, (chtype)body[i]);
+    }
+    if (attr >= 0)
+        wattroff(window, attr);
+    else
+        wattroff(window, defaultAttribute);
+    wnoutrefresh(canvas.window);
+}
+
+void Element_1D::setAttribute(int attr) {
+    this->attr = attr;
+}
+
+void Element_1D::setBody(const char *newBody) {
+    if (newBody != nullptr) {
+        this->clearElement();
+        strncpy(body, newBody, (size_t)length);
+    }
+}
+
+Element_1D::~Element_1D() {
+    beep();
+    delete body;
+}
+
+Label::Label(const Canvas *defaultCanvas, int x, int y, int length, int defaultAttribute) :
+    Element_1D(defaultCanvas, x, y, length, defaultAttribute)
+{
+}
+
+void Label::setText(const char *text, int attr) {
+    this->setAttribute(attr);
+    this->setBody(text);
+    this->render();
+}
+
+CardCount::CardCount(Canvas *defaultCanvas, int x, int y) :
+    Label(defaultCanvas, x, y, DECK_COUNT_LABEL_LEN, 0)
+{
+}
+
+void CardCount::setValue(const int val) {
+    char str[DECK_COUNT_LABEL_LEN+1];
+    snprintf(str, (size_t)length+1, "%i Cards", val);
+    setText(str);
+}
+
+HandName::HandName(Canvas *defaultCanvas, int x, int y) :
+    Label(defaultCanvas, x, y, HAND_NAME_LABEL_LEN, 0)
+{
+}
+
+void HandName::setName(const char* name) {
+    char str[HAND_NAME_LABEL_LEN+1];
+    snprintf(str, (size_t)length+1, "%s's Hand", name);
+    setText(str);
+}
+
+HandMeter::HandMeter(Canvas *defaultCanvas, int x, int y) :
+    Label(defaultCanvas, x, y, HAND_METER_LEN, 0)
+{
+}
+
+void HandMeter::setSizeAndPos(const int size, const int pos) {
+    assert(pos <= size);
+    char str[HAND_NAME_LABEL_LEN+1];
+    str[0] = '[';
+    for (int i = 1; i < HAND_METER_LEN; i++) {
+        if (i <= size) {
+            if (pos == i) str[i] = '|';
+            else str[i] = '-';
+        }
+        else str[i] = ' ';
+    }
+    str[size+1] = ']';
+    str[HAND_METER_LEN] = '\0';
+    setText(str);
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+/*
+Element::Element() :
+        defaultCanvas(nullptr), x(0), y(0), body(nullptr), cols(0), rows(0), attribute(0)
+{
+    // Nothing
+}
+
+Element::Element(const Canvas* canvas, int locX, int locY, int attribute) :
+        defaultCanvas(canvas), x(locX), y(locY), body(nullptr), cols(0), rows(0), attribute(attribute)
+{
+}
+
+Element::Element(const Canvas *defaultCanvas, int locX, int locY, char **body, int cols, int rows, int attribute) :
+        defaultCanvas(defaultCanvas), x(locX), y(locY), body(body), cols(cols), rows(rows), attribute(attribute)
+{
+    // Nothing to see here
+}
+
+void Element::setAttribute(int attr) {
+    this->attribute = attr;
+}
+
+void Element::setBody(char **newBody, int cols, int rows) {
+    if (body != nullptr) {
+        // Clear the old text
+        this->clearElement();
+        this->render();
+        // Delete the old text
+        this->deleteBody();
+    }
+    // Set up the new text
+    this->rows = rows;
+    this->cols = cols;
+    this->body = newBody;
+}
+
+// Print whitespace over the body of the element, clearing it from the canvas
+void Element::clearElement() {
+    for (int i = 0; i < rows; i++) {
+        memset(body[i], ' ', (size_t)cols);
+        body[i][cols] = '\0';
+    }
+}
+
+// Draw element onto the default canvas
+void Element::render() {
+    assert(defaultCanvas != nullptr);
+    this->renderOnto(*defaultCanvas);
+}
+
+
+void Element::renderOnto(const Canvas& canvas) {
+    assert(body != nullptr);
+    WINDOW* window = canvas.window;
+    if (attribute >= 0)
+        wattron(window, attribute);
+    for (int i = 0; i < rows; i++) {
+        mvwprintw(canvas.window, y+i, x, body[i]);
+    }
+    if (attribute >= 0)
+        wattroff(window, attribute);
+    wnoutrefresh(canvas.window);
+}
+
+void Element::setCanvas(const Canvas * canvas) {
+    this->defaultCanvas = canvas;
+}
+
+void Element::deleteBody() {
+    for(int i = 0; i < rows; i++)
+        delete[] body[i];
+    delete[] body;
+    body = nullptr;
+}
+
+Element::~Element() {
+    // Delete Skeleton Text
+    deleteBody();
+}
+
+Label::Label(const Canvas* defaultCanvas, int locX, int locY, const int totalLength) :
+        Element(defaultCanvas, locX, locY, -1), totalLength(totalLength)
+{
+}
+
+Label::Label(const Canvas *defaultCanvas, int locX, int locY, int totalLength, int attr) :
+        Element(defaultCanvas, locX, locY, attr), totalLength(totalLength)
+{
+}
+
+void Label::setText(const char *text, int attr) {
+    // Dynamically Allocate the string array
+    auto **strArr = new char*[1];
+    strArr[0] = new char[totalLength+1];
+    strncpy(strArr[0],text, (size_t)totalLength);
+    // Pass the responsibility to deallocate to the element
+    if (attr >= 0)
+        this->setAttribute(attr);
+    this->setBody(strArr, totalLength, 1);
+}
+
+HandMeter::HandMeter(const Canvas *defaultCanvas, int locX, int locY) :
+    Label(defaultCanvas, locX, locY, HAND_METER_LEN)
+{
+}
+
+// [] = 0,0
+void HandMeter::setSizeAndPos(int size, int pos) {
+    char str[HAND_METER_LEN];
+    str[0] = '[';
+    for (int i = 1; i < HAND_METER_LEN; i++) {
+        if (i <= size) {
+            if (pos == i) str[i] = '|';
+            else str[i] = '-';
+        }
+        else str[i] = ' ';
+    }
+    str[size+1] = ']';
+    setText(str, -1);
+}
+
+DeckMeter::DeckMeter(const Canvas *defaultCanvas, int locX, int locY, int deckSize) :
+    Label(defaultCanvas, locX, locY, 1), deckSize(deckSize)
+{
+}
+*/
 
 UI::UI()
 {
     initializeCurses();
     initializeCanvases();
-    //initializeElements();
+    initializeElements();
 }
 
 void UI::initializeCanvases() {
+    const unsigned int white = COLOR_PAIR(1);
+
     // Canvas(xPos, yPos, cols, rows, color, borderType)
-    C_TITLE =       new Canvas(0, 0, 70, 5, getColorPair(Colors::WHITE), Borders::TOP);
-    C_CONSOLE =     new Canvas(0, 4, 70, 3, getColorPair(Colors::WHITE), Borders::MIDDLE);
-    C_LOBBY =       new Canvas(0, 6, 70, 26, getColorPair(Colors::WHITE), Borders::BOTTOM);
-    C_SETTINGS =    new Canvas(35, 16, 34, 15, getColorPair(Colors::WHITE), Borders::FLOAT);
-    C_CONTROLS =    new Canvas(0, 32, 70, 1, getColorPair(Colors::INVERT), Borders::NONE);
-    C_MODE =        new Canvas(17, 7, 36, 21, getColorPair(Colors::WHITE), Borders::FLOAT);
-    C_MATCH =       new Canvas(0, 6, 70, 26, getColorPair(Colors::WHITE), Borders::BOTTOM);
+    C_TITLE =       new Canvas(0, 0, 70, 5, white, Borders::TOP);
+    C_CONSOLE =     new Canvas(0, 4, 70, 3, white, Borders::MIDDLE);
+    C_LOBBY =       new Canvas(0, 6, 70, 26, white, Borders::BOTTOM);
+    C_SETTINGS =    new Canvas(35, 16, 34, 15, white, Borders::FLOAT);
+    C_CONTROLS =    new Canvas(0, 32, 70, 1, white, Borders::NONE);
+    C_MODE =        new Canvas(17, 7, 36, 21, white, Borders::FLOAT);
+    C_MATCH =       new Canvas(0, 6, 70, 26, white, Borders::BOTTOM);
+    C_BELOW_CARD =  new Canvas(27, 8, 14,12, white, Borders::FLOAT);
+    C_TOP_CARD =    new Canvas(29, 11, 14,12, white, Borders::FLOAT);
 
     /* Bake On Unchanging Elements */
-    C_LOBBY->drawRow(9);
-    C_SETTINGS->drawRow(2);
-    C_SETTINGS->drawText(13, 1, "Settings");
+    //C_LOBBY->drawRow(9);
+    //C_SETTINGS->drawRow(2);
+    //C_SETTINGS->drawText(13, 1, "Settings");
     C_MATCH->drawRow(17);
     C_MATCH->drawRow(19);
     C_MATCH->drawText(1, 2, "Deck:");
     C_MATCH->drawBox(2, 5, 5, 11);
+    //C_MODE->drawRow(5);
+    //C_MODE->drawRow(7);
 
-    hide_panel(C_TITLE->panel);
-    hide_panel(C_CONSOLE->panel);
-    hide_panel(C_LOBBY->panel);
-    hide_panel(C_SETTINGS->panel);
-    hide_panel(C_MODE->panel);
-    hide_panel(C_MATCH->panel);
-
-    update_panels();
-    getch();
-
-    show_panel(C_TITLE->panel);
-    show_panel(C_CONSOLE->panel);
-    show_panel(C_LOBBY->panel);
-    show_panel(C_SETTINGS->panel);
-
-    update_panels();
-
-    doupdate();
 }
 
 /*
@@ -168,146 +424,57 @@ void UI::initializeCurses()
 /*
  * Initialize all UI elements (structs containing window, panel, and spatial information) for use in Uno.
  */
-/*
+
 void UI::initializeElements()
 {
     // Create Elements with Default Values
-    // Its pretty ugly...
+    /*
+    auto **b = new char*[2];
+    b[0] = new char[sizeof("My Default")];
+    b[1] = new char[sizeof("Element")];
+    strcpy(b[0],"My Default");
+    strcpy(b[1],"Element");
+    */
+    /*
+    E_CONSOLE = new Label(C_CONSOLE, 1, 1, CONSOLE_LABEL_LEN, getColorPair(Colors::YELLOW));
+    E_CONSOLE->setText("Console Initialized");
+    E_CONSOLE->render();
 
-    // Element(xPos, yPos, xDim, yDim, color, borderType, parent/tether)
-    
-    unsigned int WHITE = getColorPair(Colors::WHITE);
+    E_MODE_CONSOLE = new Label(C_MODE, 1, 6, MODE_CONSOLE_LABEL_LEN, getColorPair(Colors::YELLOW));
+    E_MODE_CONSOLE->setText("Mode Console Initialized");
+    E_MODE_CONSOLE->render();
 
-    el[Elements::TITLE] = new Element(0, 0, 70, 7, WHITE, Borders::TITLE, nullptr);
+    E_DECK_COUNT = new Label(C_MATCH, 1, 3, DECK_COUNT_LABEL_LEN);
+    E_DECK_COUNT->setText("999 Cards");
+    E_DECK_COUNT->render();
 
-    el[Elements::WINDOW_MODE] = new Element(17, 7, 36, 21, WHITE, Borders::BOX, nullptr);
-    el[Elements::MAIN_STAGE] = new Element(1, 1, 34, 4, WHITE, Borders::BOX, el[Elements::WINDOW_MODE]);
-    el[Elements::BUTTON_LOCAL] = new Element(1, 8, 34, 3, WHITE, Borders::BOX, el[Elements::WINDOW_MODE]);
-    el[Elements::BUTTON_HOST] = new Element(1, 11, 34, 3, WHITE, Borders::BOX, el[Elements::WINDOW_MODE]);
-    el[Elements::BUTTON_JOIN] = new Element(1, 14, 34, 3, WHITE, Borders::BOX, el[Elements::WINDOW_MODE]);
-    el[Elements::BUTTON_EXIT] = new Element(1, 17, 34, 3, WHITE, Borders::BOX, el[Elements::WINDOW_MODE]);
+    E_HAND_NAME = new Label(C_MATCH, 1, 18, HAND_NAME_LABEL_LEN);
+    E_HAND_NAME->setText("aaaaaaaaaaaa's Hand");
+    E_HAND_NAME->render();
 
-    el[Elements::WINDOW_LOBBY] = new Element(0, 6, 70, 26, WHITE, Borders::MIDDLE, nullptr);
-    el[Elements::PLAYER_STAGE_0] = new Element(1, 1, 34, 4, WHITE, Borders::BOX, el[Elements::WINDOW_LOBBY]);
-    el[Elements::PLAYER_STAGE_1] = new Element(35, 1, 34, 4, WHITE, Borders::BOX, el[Elements::WINDOW_LOBBY]);
-    el[Elements::PLAYER_STAGE_2] = new Element(1, 5, 34, 4, WHITE, Borders::BOX, el[Elements::WINDOW_LOBBY]);
-    el[Elements::PLAYER_STAGE_3] = new Element(35, 5, 34, 4, WHITE, Borders::BOX, el[Elements::WINDOW_LOBBY]);
-    el[Elements::BUTTON_START] = new Element(1, 10, 34, 3, WHITE, Borders::BOX, el[Elements::WINDOW_LOBBY]);
-    el[Elements::BUTTON_ADD_AI] = new Element(1, 13, 17, 3, WHITE, Borders::BOX, el[Elements::WINDOW_LOBBY]);
-    el[Elements::BUTTON_SEARCH] = new Element(18, 13, 17, 3, WHITE, Borders::BOX, el[Elements::WINDOW_LOBBY]);
-    el[Elements::BUTTON_KICK] = new Element(1, 16, 34, 3, WHITE, Borders::BOX, el[Elements::WINDOW_LOBBY]);
-    el[Elements::BUTTON_CLOSE] = new Element(1, 19, 34, 3, WHITE, Borders::BOX, el[Elements::WINDOW_LOBBY]);
-    el[Elements::BUTTON_SETTINGS] = new Element(1, 22, 34, 3, WHITE, Borders::BOX, el[Elements::WINDOW_LOBBY]);
+    E_HAND_METER = new HandMeter(C_MATCH, 55, 18);
+    E_HAND_METER->setSizeAndPos(0,0);
+    E_HAND_METER->render();
+    */
 
-    el[Elements::WINDOW_SETTINGS] = new Element(35, 16, 34, 15, WHITE, Borders::BOX, nullptr);
-    el[Elements::BUTTON_DISPLAY_EFFECTS] = new Element(1, 3, 32, 1, WHITE, Borders::NONE, el[Elements::WINDOW_SETTINGS]);
-    el[Elements::BUTTON_COMPUTER_SPEED] = new Element(1, 6, 32, 1, WHITE, Borders::NONE, el[Elements::WINDOW_SETTINGS]);
-    el[Elements::BUTTON_SHOW_HANDS] = new Element(1, 9, 32, 1, WHITE, Borders::NONE, el[Elements::WINDOW_SETTINGS]);
-    el[Elements::BUTTON_DOES_NOTHING] = new Element(1, 12, 32, 1, WHITE, Borders::NONE, el[Elements::WINDOW_SETTINGS]);
+    E_CONSOLE = new Label(C_CONSOLE, 1, 1, CONSOLE_LABEL_LEN, getColorPair(Colors::YELLOW));
+    E_CONSOLE->setText("Console Initialized", getColorPair(Colors::GRAY));
 
-    el[Elements::WINDOW_MATCH] = new Element(0, 6, 70, 18, WHITE, Borders::MATCH, nullptr);
-    el[Elements::WINDOW_HAND] = new Element(0, 23, 70, 9, WHITE, Borders::MIDDLE, nullptr);
-    el[Elements::PREV_CARD] = new Element(2, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
-    el[Elements::CARD_0] = new Element(7, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
-    el[Elements::CARD_1] = new Element(11, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
-    el[Elements::CARD_2] = new Element(15, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
-    el[Elements::CARD_3] = new Element(19, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
-    el[Elements::CARD_4] = new Element(23, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
-    el[Elements::CARD_5] = new Element(27, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
-    el[Elements::CARD_6] = new Element(31, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
-    el[Elements::CARD_7] = new Element(35, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
-    el[Elements::CARD_8] = new Element(39, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
-    el[Elements::CARD_9] = new Element(43, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
-    el[Elements::CARD_10] = new Element(47, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
-    el[Elements::CARD_11] = new Element(51, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
-    el[Elements::CARD_12] = new Element(55, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
-    el[Elements::CARD_13] = new Element(59, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
-    el[Elements::NEXT_CARD] = new Element(64, 4, 4, 4, WHITE, Borders::BOX, el[Elements::WINDOW_HAND]);
+    E_MODE_CONSOLE = new Label(C_MODE, 1, 6, MODE_CONSOLE_LABEL_LEN, getColorPair(Colors::YELLOW));
+    E_MODE_CONSOLE->setText("Mode Console Initialized", getColorPair(Colors::GRAY));
 
-    el[Elements::DECK_METER] = new Element(2, 5, 5, 11, WHITE, Borders::BOX, el[Elements::WINDOW_MATCH]);
-    el[Elements::DECK_COUNT] = new Element(1, 2, 9, 2, WHITE, Borders::NONE, el[Elements::WINDOW_MATCH]);
-    el[Elements::BELOW_CARD] = new Element(27, 2, 14, 12, WHITE, Borders::BOX, el[Elements::WINDOW_MATCH]);
-    el[Elements::TOP_CARD] = new Element(29, 4, 14, 12, WHITE, Borders::BOX, el[Elements::WINDOW_MATCH]);
-    el[Elements::PLAYER_TILE_0] = new Element(55, 1, 14, 4, WHITE, Borders::BOX, el[Elements::WINDOW_MATCH]);
-    el[Elements::PLAYER_TILE_1] = new Element(55, 5, 14, 4, WHITE, Borders::BOX, el[Elements::WINDOW_MATCH]);
-    el[Elements::PLAYER_TILE_2] = new Element(55, 9, 14, 4, WHITE, Borders::BOX, el[Elements::WINDOW_MATCH]);
-    el[Elements::PLAYER_TILE_3] = new Element(55, 13, 14, 4, WHITE, Borders::BOX, el[Elements::WINDOW_MATCH]);
+    E_HAND_NAME = new HandName(C_MATCH, 1, 18);
+    E_HAND_NAME->setName("Anonymous");
 
-    // Draw Text Onto Elements
+    E_HAND_METER = new HandMeter(C_MATCH, 55, 18);
+    E_HAND_METER->setSizeAndPos(5,1);
 
-    putText(Elements::TITLE, 25, 1, "|| ||", Colors::BLUE);
-    putText(Elements::TITLE, 31, 1, "||\\ ||", Colors::GREEN);
-    putText(Elements::TITLE, 39, 1, "// \\\\", Colors::RED);
-    putText(Elements::TITLE, 25, 2, "|| ||", Colors::BLUE);
-    putText(Elements::TITLE, 31, 2, "||\\\\||", Colors::GREEN);
-    putText(Elements::TITLE, 38, 2, "((   ))", Colors::RED);
-    putText(Elements::TITLE, 25, 3, "\\\\ //", Colors::BLUE);
-    putText(Elements::TITLE, 31, 3, "|| \\||", Colors::GREEN);
-    putText(Elements::TITLE, 39, 3, "\\\\ //", Colors::RED);
-    putText(Elements::NEXT_CARD, 1, 1, "->", Colors::WHITE);
-    putText(Elements::NEXT_CARD, 1, 2, "->", Colors::WHITE);
-    putText(Elements::PREV_CARD, 1, 1, "<-", Colors::WHITE);
-    putText(Elements::PREV_CARD, 1, 2, "<-", Colors::WHITE);
-    putText(Elements::DECK_COUNT, 0, 0, "Deck:", Colors::WHITE);
-    putText(Elements::DECK_COUNT, 0, 1, "0 Cards", Colors::WHITE);
-    putText(Elements::WINDOW_SETTINGS, 13, 1, "Settings", Colors::WHITE);
+    E_CARD_COUNT = new CardCount(C_MATCH, 1, 3);
+    E_CARD_COUNT->setValue(999);
 
-    // Make some Lines and Borders
-    putSpecialChar(Elements::TITLE, 0, 4, ACS_LTEE, Colors::WHITE);
-    putSpecialChar(Elements::TITLE, 69, 4, ACS_RTEE, Colors::WHITE);
-    putSpecialChar(Elements::WINDOW_LOBBY, 0, 9, ACS_LTEE, Colors::WHITE);
-    putSpecialChar(Elements::WINDOW_LOBBY, 69, 9, ACS_RTEE, Colors::WHITE);
-    putSpecialChar(Elements::WINDOW_HAND, 0, 2, ACS_LTEE, Colors::WHITE);
-    putSpecialChar(Elements::WINDOW_HAND, 69, 2, ACS_RTEE, Colors::WHITE);
-    putSpecialChar(Elements::WINDOW_MODE, 0, 5, ACS_LTEE, Colors::WHITE);
-    putSpecialChar(Elements::WINDOW_MODE, 0, 7, ACS_LTEE, Colors::WHITE);
-    putSpecialChar(Elements::WINDOW_MODE, 35, 5, ACS_RTEE, Colors::WHITE);
-    putSpecialChar(Elements::WINDOW_MODE, 35, 7, ACS_RTEE, Colors::WHITE);
-    putSpecialChar(Elements::WINDOW_SETTINGS, 33, 2, ACS_RTEE, Colors::WHITE);
-    putSpecialChar(Elements::WINDOW_SETTINGS, 0, 2, ACS_LTEE, Colors::WHITE);
-    for (int i = 1 ; i < 69; i++) {
-        putSpecialChar(Elements::TITLE, i, 4, ACS_HLINE, Colors::WHITE);
-        putSpecialChar(Elements::WINDOW_LOBBY, i, 9, ACS_HLINE, Colors::WHITE);
-        putSpecialChar(Elements::WINDOW_HAND, i, 2, ACS_HLINE, Colors::WHITE);
-        if (i < 35) {
-            putSpecialChar(Elements::WINDOW_MODE, i, 5, ACS_HLINE, Colors::WHITE);
-            putSpecialChar(Elements::WINDOW_MODE, i, 7, ACS_HLINE, Colors::WHITE);
-            if (i < 33) putSpecialChar(Elements::WINDOW_SETTINGS, i, 2, ACS_HLINE, Colors::WHITE);
-        }
-    }
-
-    // Initialize Button Text
-    int updateSize = 14;
-    ElementUpdate data[14] = {
-            ElementUpdate(Elements::BUTTON_START, 11, 32, "Start Game", false, Colors::DEFAULT, false),
-            ElementUpdate(Elements::BUTTON_ADD_AI, 5, 15, "Add AI", false, Colors::DEFAULT, false),
-            ElementUpdate(Elements::BUTTON_SEARCH, 4, 15, "Search", false, Colors::DEFAULT, false),
-            ElementUpdate(Elements::BUTTON_KICK, 11, 32, "Kick Player", false, Colors::DEFAULT, false),
-            ElementUpdate(Elements::BUTTON_CLOSE, 11, 32, "Close Room", false, Colors::DEFAULT, false),
-            ElementUpdate(Elements::BUTTON_SETTINGS, 12, 32, "Settings", false, Colors::DEFAULT, false),
-            ElementUpdate(Elements::BUTTON_HOST, 8, 32, "Host Multiplayer", false, Colors::DEFAULT, false),
-            ElementUpdate(Elements::BUTTON_JOIN, 8, 32, "Join Multiplayer", false, Colors::DEFAULT, false),
-            ElementUpdate(Elements::BUTTON_LOCAL, 7, 32, "Local Singleplayer", false, Colors::DEFAULT, false),
-            ElementUpdate(Elements::BUTTON_EXIT, 14, 32, "Exit", false, Colors::DEFAULT, false),
-            ElementUpdate(Elements::BUTTON_DISPLAY_EFFECTS, 0, 32, "- Display Effects", false, Colors::DEFAULT, true),
-            ElementUpdate(Elements::BUTTON_COMPUTER_SPEED, 0, 32, "- Computer Speed", false, Colors::DEFAULT, true),
-            ElementUpdate(Elements::BUTTON_SHOW_HANDS, 0, 32, "- Show Computer Hands", false, Colors::DEFAULT, true),
-            ElementUpdate(Elements::BUTTON_DOES_NOTHING, 0, 32, "- Does Nothing", false, Colors::DEFAULT, true),
-    };
-    updateButtons(data, updateSize);
-
-
-    // Finally, Hide Everything Except stdscr
-    for (auto it=el.begin(); it!=el.end(); it++)
-        if (it->first != Elements::MAIN)
-            hide_panel(it->second->panel);
-    updatePanels();
-
-    show_panel(el[Elements::TITLE]->panel);
-    updatePanels();
+    doupdate();
 
 }
-*/
 
 
 

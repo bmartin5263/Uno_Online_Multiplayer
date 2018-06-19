@@ -8,6 +8,11 @@
 #include "ui_elements.h"
 #include <map>
 
+#define CONSOLE_LABEL_LEN 68
+#define MODE_CONSOLE_LABEL_LEN 34
+#define DECK_COUNT_LABEL_LEN 9
+#define HAND_NAME_LABEL_LEN 19
+#define HAND_METER_LEN 14
 
 /*
  * Class: UI
@@ -38,15 +43,11 @@ public:
 
 private:
 
-    void colorElement(Elements, Colors);
     void initializeCanvases();
     void initializeCurses();
     void initializeElements();
     void printToConsole(const char*, Colors);
     void printToModeConsole(const char*, Colors);
-    void putChar(Elements, int, int, char, Colors = Colors::DEFAULT);
-    void putText(Elements, int, int, const char*, Colors = Colors::DEFAULT);
-    void putSpecialChar(Elements element, int x, int y, chtype character, Colors color);
 
     static void updatePanels();
 
@@ -58,12 +59,24 @@ private:
     Canvas* C_MATCH;
     Canvas* C_SETTINGS;
     Canvas* C_CONTROLS;
+    Canvas* C_TOP_CARD;
+    Canvas* C_BELOW_CARD;
 
     /* Elements */
+    //Label* E_CONSOLE;
+    //Label* E_MODE_CONSOLE;
+    //Label* E_DECK_COUNT;
+    //Label* E_HAND_NAME;
+    //HandMeter* E_HAND_METER;
+    //DeckMete* E_DECK_METER;
 
+    Label* E_CONSOLE;
+    Label* E_MODE_CONSOLE;
+    HandName* E_HAND_NAME;
+    HandMeter* E_HAND_METER;
+    CardCount* E_CARD_COUNT;
 
 
 };
-
 
 #endif //UNO_ONLINE_MULTIPLAYER_UI_H
