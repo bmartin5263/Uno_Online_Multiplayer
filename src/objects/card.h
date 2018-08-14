@@ -14,8 +14,8 @@ public:
     static int getPointValue(const Card& card);
 
     Card(CardColors color, CardValues value, bool wild);
-    Card(const Card &other) = delete;
-    Card& operator = (const Card & other) = delete;
+    Card(const Card &other);
+    Card& operator = (const Card & other);
     ~Card();
 
     CardColors getColor() const;
@@ -24,9 +24,9 @@ public:
 
 private:
 
-    const CardColors color;
-    const CardValues value;
-    const bool wild;
+    CardColors color;
+    CardValues value;
+    bool wild;
 
 };
 

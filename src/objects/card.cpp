@@ -42,6 +42,22 @@ Card::Card(CardColors color, CardValues value, bool wild) :
 {
 }
 
+Card::Card(const Card &other) :
+    color(other.color), value(other.value), wild(other.wild)
+{
+}
+
+Card & Card::operator = (const Card &other)
+{
+    if (this != &other) {
+        this->color = other.color;
+        this->value = other.value;
+        this->wild = other.wild;
+    }
+
+    return *this;
+}
+
 bool Card::isWild() const {
     return wild;
 }
