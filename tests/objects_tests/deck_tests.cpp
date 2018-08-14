@@ -9,8 +9,6 @@
 
 using testing::Eq;
 
-const int DECK_SIZE = 4;
-
 TEST(deck_tests, create_deck) {
     Deck d;
     ASSERT_EQ(d.size(), 0);

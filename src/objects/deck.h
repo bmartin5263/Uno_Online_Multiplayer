@@ -19,6 +19,8 @@ public:
 
     Card popCard();
     Card peekCard();
+    std::vector<Card>::iterator begin();
+    std::vector<Card>::iterator end();
     void pushCard(Card& card);
     unsigned long size();
     bool empty();

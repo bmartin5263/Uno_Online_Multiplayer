@@ -50,6 +50,14 @@ bool Deck::empty() {
     return deck.empty();
 }
 
+std::vector<Card>::iterator Deck::begin() {
+    return deck.begin();
+}
+
+std::vector<Card>::iterator Deck::end() {
+    return deck.end();
+}
+
 Deck::~Deck() {
     // Nothing Here
 }
