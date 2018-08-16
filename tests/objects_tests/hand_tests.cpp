@@ -99,6 +99,7 @@ TEST(hand_tests, remove_card_from_middle) {
     h.addCard(c1);
     h.addCard(c2);
     h.addCard(c3);
+
     ASSERT_EQ(h.size(), 3);
     ASSERT_EQ(h.empty(), false);
 
