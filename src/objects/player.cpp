@@ -4,8 +4,8 @@
 
 #include "player.h"
 
-Player::Player(std::string name, Hand* hand) :
-    name(name), hand(std::shared_ptr<Hand>(hand)), points(0)
+Player::Player(std::string name, std::shared_ptr<Hand> hand) :
+    name(name), hand(hand), points(0)
 {
 }
 

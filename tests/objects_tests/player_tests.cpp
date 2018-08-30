@@ -9,17 +9,17 @@
 using testing::Eq;
 
 TEST(player_tests, create_player) {
-    Hand* h = new Hand();
+    std::shared_ptr<Hand> h (new Hand);
     Player p("Brandon", h);
 
     ASSERT_EQ(p.getName(), "Brandon");
     ASSERT_EQ(p.getPoints(), 0);
-    ASSERT_EQ(p.getHand().get(), h);
+    ASSERT_EQ(p.getHand(), h);
     ASSERT_EQ(p.getHand()->size(), 0);
 }
 
 TEST(player_tests, add_points) {
-    Hand* h = new Hand();
+    std::shared_ptr<Hand> h (new Hand);
     Player p("Brandon", h);
 
     p.addPoints(100);
@@ -31,7 +31,7 @@ TEST(player_tests, add_points) {
 
 
 TEST(player_tests, add_cards_to_hand) {
-    Hand* h = new Hand();
+    std::shared_ptr<Hand> h (new Hand);
     Player p("Brandon", h);
 
     { // Enforce Scoping

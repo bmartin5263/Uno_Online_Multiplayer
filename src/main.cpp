@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
+#include "objects/player.h"
+#include <vector>
+#include <assert.h>
 
 int main(int argc, char* argv[])
 {

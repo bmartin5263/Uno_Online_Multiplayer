@@ -12,7 +12,7 @@ class Player {
 
 public:
 
-    Player(std::string name, Hand* hand);
+    Player(std::string name, std::shared_ptr<Hand> hand);
     Player(const Player &other);
     Player& operator= (const Player &other);
     ~Player();
