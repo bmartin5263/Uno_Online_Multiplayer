@@ -12,7 +12,7 @@ class Player {
 
 public:
 
-    Player(std::string name, std::shared_ptr<Hand> hand);
+    Player(std::string name, Hand* hand);
     Player(const Player &other);
     Player& operator= (const Player &other);
     ~Player();
@@ -20,12 +20,12 @@ public:
     void addPoints(int pts);
     int getPoints();
     std::string getName();
-    std::shared_ptr<Hand> getHand();
+    Hand* getHand();
 
 private:
 
     std::string name;
-    std::shared_ptr<Hand> hand;
+    std::unique_ptr<Hand> hand;
     int points;
 
 };

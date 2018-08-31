@@ -4,22 +4,29 @@
 
 #include "player.h"
 
-Player::Player(std::string name, std::shared_ptr<Hand> hand) :
+Player::Player(std::string name, Hand* hand) :
     name(name), hand(hand), points(0)
 {
 }
 
 Player::Player(const Player &other) :
-    name(other.name), hand(other.hand), points(other.points)
+    name(other.name), hand(std::unique_ptr<Hand>(new Hand)), points(other.points)
 {
+    for (auto it = other.hand->begin(); it != other.hand->end(); it++) {
+        hand->addCard(*it);
+    }
 }
 
 Player & Player::operator = (const Player &other)
 {
     if (this != &other) {
         this->name = other.name;
-        this->hand = other.hand;
+        this->hand = std::unique_ptr<Hand>(new Hand);
         this->points = other.points;
+
+        for (auto it = other.hand->begin(); it != other.hand->end(); it++) {
+            hand->addCard(*it);
+        }
     }
 
     return *this;
@@ -29,8 +36,8 @@ void Player::addPoints(int pts) {
     points += pts;
 }
 
-std::shared_ptr<Hand> Player::getHand() {
-    return hand;
+Hand* Player::getHand() {
+    return hand.get();
 }
 
 std::string Player::getName() {
