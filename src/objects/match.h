@@ -26,6 +26,7 @@ public:
 
     void drawCard(int playerId);
     void playCard(int playerId, unsigned long cardIndex);
+    void setWildColor(CardColors color);
 
     Deck* getDeck();
     Deck* getPile();
@@ -35,6 +36,7 @@ public:
     bool isReversed();
     bool isComplete();
     bool isAborted();
+    bool isWild();
 
 private:
 

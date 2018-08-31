@@ -123,11 +123,55 @@ TEST(match_tests, draw_cards_from_deck) {
     ASSERT_EQ(h1->size(), 0);
     ASSERT_EQ(h2->size(), 0);
 }
-//
-//TEST(match_tests, play_card_from_hand) {
-//    Deck* deck = new Deck();
-//    Deck* pile = new Deck();
-//    Hand* h1 = new Hand();
-//
-//
-//}
+
+TEST(match_tests, play_card_from_hand) {
+    Deck* deck = new Deck();
+    Deck* pile = new Deck();
+
+    Hand* h1 = new Hand();
+    Card c(CardColors::BLUE, CardValues::ONE, false);
+    h1->addCard(c);
+
+    std::vector<std::unique_ptr<Player>> players;
+    std::unique_ptr<Player> p1(new Player("Brandon", h1));
+
+    players.push_back(std::move(p1));
+
+    Match m(players, deck, pile);
+
+    m.playCard(0, 0);
+
+    ASSERT_EQ(m.isWild(), false);
+    ASSERT_EQ(m.getPile()->peekCard(), c);
+    ASSERT_EQ(m.getPile()->size(), 1);
+    ASSERT_EQ(m.getPlayer(0)->getHand()->size(), 0);
+
+}
+
+TEST(match_tests, play_wild_card_from_hand) {
+    Deck* deck = new Deck();
+    Deck* pile = new Deck();
+
+    Hand* h1 = new Hand();
+    Card c(CardColors::WILD, CardValues::WILD, true);
+    h1->addCard(c);
+
+    std::vector<std::unique_ptr<Player>> players;
+    std::unique_ptr<Player> p1(new Player("Brandon", h1));
+
+    players.push_back(std::move(p1));
+
+    Match m(players, deck, pile);
+
+    m.playCard(0, 0);
+
+    ASSERT_EQ(m.isWild(), true);
+
+    m.setWildColor(CardColors::YELLOW);
+    Card newCard(CardColors::YELLOW, CardValues::WILD, false);
+
+    ASSERT_EQ(m.isWild(), false);
+    ASSERT_EQ(m.getPile()->peekCard(), newCard);
+    ASSERT_EQ(m.getPile()->size(), 1);
+
+}

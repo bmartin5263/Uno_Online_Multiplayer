@@ -58,6 +58,13 @@ std::vector<Card>::iterator Deck::end() {
     return deck.end();
 }
 
+/*
+ * Change the Card at the top of the stack. For use with wild color changes.
+ */
+void Deck::exchangeTopCard(Card &card) {
+    deck[0] = card;
+}
+
 Deck::~Deck() {
     // Nothing Here
 }

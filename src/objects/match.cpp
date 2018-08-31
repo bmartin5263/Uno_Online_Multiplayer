@@ -76,6 +76,16 @@ void Match::resolveCard() {
     Card card = pile->peekCard();
 }
 
+bool Match::isWild() {
+    return pile->peekCard().isWild();
+}
+
+void Match::setWildColor(CardColors color) {
+    Card topCard = pile->peekCard();
+    Card newCard(color, topCard.getValue(), false);
+    pile->exchangeTopCard(newCard);
+}
+
 Match::~Match() {
     // Nothing
 }

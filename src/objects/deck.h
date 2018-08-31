@@ -22,6 +22,7 @@ public:
     std::vector<Card>::iterator begin();
     std::vector<Card>::iterator end();
     void pushCard(Card& card);
+    void exchangeTopCard(Card& card);
     unsigned long size();
     bool empty();
 
