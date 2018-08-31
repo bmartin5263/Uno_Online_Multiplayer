@@ -18,7 +18,9 @@ public:
     ~Player();
 
     void addPoints(int pts);
+    void addForceDraws(int draws);
     int getPoints();
+    int getForceDraws();
     std::string getName();
     Hand* getHand();
 
@@ -27,6 +29,7 @@ private:
     std::string name;
     std::unique_ptr<Hand> hand;
     int points;
+    int forceDraw;
 
 };
 

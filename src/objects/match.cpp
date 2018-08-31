@@ -53,6 +53,7 @@ void Match::drawCard(int playerId) {
 void Match::playCard(int playerId, unsigned long cardIndex) {
     Card card = players[playerId]->getHand()->removeCard(cardIndex);
     pile->pushCard(card);
+    resolveCard();
 }
 
 void Match::nextTurn() {
@@ -74,6 +75,30 @@ void Match::nextTurn() {
 
 void Match::resolveCard() {
     Card card = pile->peekCard();
+    int draws = 0;
+    bool forceDraw = false;
+    switch (card.getValue()) {
+        case CardValues::PLUS4:
+            draws += 2;
+        case CardValues::PLUS2:
+            draws += 2;
+            forceDraw = true;
+            break;
+        case CardValues::REVERSE:
+            if (players.size() != 2) {
+                reverse = not reverse;
+                break;
+            }
+        case CardValues::SKIP:
+            nextTurn();
+            break;
+        default:
+            break;
+    }
+    nextTurn();
+    if (forceDraw) {
+        players[turn]->addForceDraws(draws);
+    }
 }
 
 bool Match::isWild() {
@@ -84,6 +109,10 @@ void Match::setWildColor(CardColors color) {
     Card topCard = pile->peekCard();
     Card newCard(color, topCard.getValue(), false);
     pile->exchangeTopCard(newCard);
+}
+
+void Match::setTurn(int turn) {
+    this->turn = turn;
 }
 
 Match::~Match() {

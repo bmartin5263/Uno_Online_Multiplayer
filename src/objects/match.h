@@ -27,6 +27,7 @@ public:
     void drawCard(int playerId);
     void playCard(int playerId, unsigned long cardIndex);
     void setWildColor(CardColors color);
+    void setTurn(int turn);
 
     Deck* getDeck();
     Deck* getPile();

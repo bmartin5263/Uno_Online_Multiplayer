@@ -61,20 +61,17 @@ TEST(match_tests, create_match_with_players) {
 
     std::unique_ptr<Player> p1(new Player("Brandon", h1));
     std::unique_ptr<Player> p2(new Player("Mark", h2));
-    puts("Players Created");
 
     players.push_back(std::move(p1));
     players.push_back(std::move(p2));
 
     {
         Match m(players, deck, pile);
-        puts("Match Created");
 
         ASSERT_EQ(m.getPlayers().size(), 2);
         ASSERT_EQ(m.getPlayer(0)->getName(), "Brandon");
         ASSERT_EQ(m.getPlayer(1)->getName(), "Mark");
     }
-    puts("Match Destroyed");
 
     ASSERT_EQ(players.size(), 2);
     ASSERT_EQ(players[0]->getName(), "Brandon");
@@ -124,18 +121,21 @@ TEST(match_tests, draw_cards_from_deck) {
     ASSERT_EQ(h2->size(), 0);
 }
 
-TEST(match_tests, play_card_from_hand) {
+TEST(match_tests, play_normal_card_from_hand) {
     Deck* deck = new Deck();
     Deck* pile = new Deck();
 
     Hand* h1 = new Hand();
+    Hand* h2 = new Hand();
     Card c(CardColors::BLUE, CardValues::ONE, false);
     h1->addCard(c);
 
     std::vector<std::unique_ptr<Player>> players;
     std::unique_ptr<Player> p1(new Player("Brandon", h1));
+    std::unique_ptr<Player> p2(new Player("Mark", h2));
 
     players.push_back(std::move(p1));
+    players.push_back(std::move(p2));
 
     Match m(players, deck, pile);
 
@@ -145,6 +145,7 @@ TEST(match_tests, play_card_from_hand) {
     ASSERT_EQ(m.getPile()->peekCard(), c);
     ASSERT_EQ(m.getPile()->size(), 1);
     ASSERT_EQ(m.getPlayer(0)->getHand()->size(), 0);
+    ASSERT_EQ(m.getTurn(), 1);
 
 }
 
@@ -173,5 +174,157 @@ TEST(match_tests, play_wild_card_from_hand) {
     ASSERT_EQ(m.isWild(), false);
     ASSERT_EQ(m.getPile()->peekCard(), newCard);
     ASSERT_EQ(m.getPile()->size(), 1);
+
+}
+
+TEST(match_tests, play_skip_card_from_hand) {
+    Deck* deck = new Deck();
+    Deck* pile = new Deck();
+
+    Hand* h1 = new Hand();
+    Hand* h2 = new Hand();
+    Card c1(CardColors::BLUE, CardValues::THREE, false);
+    Card c2(CardColors::YELLOW, CardValues::SKIP, false);
+    Card c3(CardColors::GREEN, CardValues::REVERSE, false);
+    h1->addCard(c1);
+    h1->addCard(c2);
+    h1->addCard(c3);
+
+    std::vector<std::unique_ptr<Player>> players;
+    std::unique_ptr<Player> p1(new Player("Brandon", h1));
+    std::unique_ptr<Player> p2(new Player("Mark", h2));
+
+    players.push_back(std::move(p1));
+    players.push_back(std::move(p2));
+
+    Match m(players, deck, pile);
+
+    m.playCard(0, 1);
+
+    ASSERT_EQ(m.getPile()->peekCard(), c2);
+    ASSERT_EQ(m.getTurn(), 0);
+
+}
+
+TEST(match_tests, play_reverse_card_with_two_players) {
+    Deck* deck = new Deck();
+    Deck* pile = new Deck();
+
+    Hand* h1 = new Hand();
+    Hand* h2 = new Hand();
+    Card c1(CardColors::BLUE, CardValues::THREE, false);
+    Card c2(CardColors::YELLOW, CardValues::SKIP, false);
+    Card c3(CardColors::GREEN, CardValues::REVERSE, false);
+    h2->addCard(c1);
+    h2->addCard(c2);
+    h2->addCard(c3);
+
+    std::vector<std::unique_ptr<Player>> players;
+    std::unique_ptr<Player> p1(new Player("Brandon", h1));
+    std::unique_ptr<Player> p2(new Player("Mark", h2));
+
+    players.push_back(std::move(p1));
+    players.push_back(std::move(p2));
+
+    Match m(players, deck, pile);
+
+    m.playCard(1, 2);
+
+    ASSERT_EQ(m.getPile()->peekCard(), c3);
+    ASSERT_EQ(m.getTurn(), 0);
+
+}
+
+TEST(match_tests, play_reverse_card_with_three_players) {
+    Deck* deck = new Deck();
+    Deck* pile = new Deck();
+
+    Hand* h1 = new Hand();
+    Hand* h2 = new Hand();
+    Hand* h3 = new Hand();
+    Card c1(CardColors::BLUE, CardValues::THREE, false);
+    Card c2(CardColors::YELLOW, CardValues::SKIP, false);
+    Card c3(CardColors::GREEN, CardValues::REVERSE, false);
+    h2->addCard(c1);
+    h2->addCard(c2);
+    h2->addCard(c3);
+
+    std::vector<std::unique_ptr<Player>> players;
+    std::unique_ptr<Player> p1(new Player("Brandon", h1));
+    std::unique_ptr<Player> p2(new Player("Mark", h2));
+    std::unique_ptr<Player> p3(new Player("Frank", h3));
+
+    players.push_back(std::move(p1));
+    players.push_back(std::move(p2));
+    players.push_back(std::move(p3));
+
+    Match m(players, deck, pile);
+    m.setTurn(1);
+
+    m.playCard(1, 2);
+
+    ASSERT_EQ(m.getPile()->peekCard(), c3);
+    ASSERT_EQ(m.getTurn(), 0);
+
+}
+
+TEST(match_tests, play_plus_2_card) {
+    Deck* deck = new Deck();
+    Deck* pile = new Deck();
+
+    Hand* h1 = new Hand();
+    Hand* h2 = new Hand();
+    Card c1(CardColors::BLUE, CardValues::PLUS2, false);
+    Card c2(CardColors::YELLOW, CardValues::SKIP, false);
+    Card c3(CardColors::GREEN, CardValues::REVERSE, false);
+    h1->addCard(c1);
+    h1->addCard(c2);
+    h1->addCard(c3);
+
+    std::vector<std::unique_ptr<Player>> players;
+    std::unique_ptr<Player> p1(new Player("Brandon", h1));
+    std::unique_ptr<Player> p2(new Player("Mark", h2));
+
+    players.push_back(std::move(p1));
+    players.push_back(std::move(p2));
+
+    Match m(players, deck, pile);
+    m.setTurn(1);
+
+    m.playCard(0, 0);
+
+    ASSERT_EQ(m.getPile()->peekCard(), c1);
+    ASSERT_EQ(m.getPlayer(m.getTurn())->getForceDraws(), 2);
+
+}
+
+TEST(match_tests, play_plus_4_card) {
+    Deck* deck = new Deck();
+    Deck* pile = new Deck();
+
+    Hand* h1 = new Hand();
+    Hand* h2 = new Hand();
+    Card c1(CardColors::BLUE, CardValues::PLUS2, false);
+    Card c2(CardColors::YELLOW, CardValues::SKIP, false);
+    Card c3(CardColors::WILD, CardValues::PLUS4, true);
+    h1->addCard(c1);
+    h1->addCard(c2);
+    h1->addCard(c3);
+
+    std::vector<std::unique_ptr<Player>> players;
+    std::unique_ptr<Player> p1(new Player("Brandon", h1));
+    std::unique_ptr<Player> p2(new Player("Mark", h2));
+
+    players.push_back(std::move(p1));
+    players.push_back(std::move(p2));
+
+    Match m(players, deck, pile);
+    m.setTurn(1);
+
+    m.playCard(0, 2);
+
+    ASSERT_EQ(m.getPile()->peekCard(), c3);
+    ASSERT_EQ(m.getPlayer(m.getTurn())->getForceDraws(), 4);
+    ASSERT_EQ(m.isWild(), true);
 
 }

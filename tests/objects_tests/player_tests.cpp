@@ -14,6 +14,7 @@ TEST(player_tests, create_player) {
 
     ASSERT_EQ(p.getName(), "Brandon");
     ASSERT_EQ(p.getPoints(), 0);
+    ASSERT_EQ(p.getForceDraws(), 0);
     ASSERT_EQ(p.getHand(), h);
     ASSERT_EQ(p.getHand()->size(), 0);
 }
@@ -27,6 +28,20 @@ TEST(player_tests, add_points) {
     p.addPoints(-200);
 
     ASSERT_EQ(p.getPoints(), 300);
+}
+
+TEST(player_tests, add_force_draws) {
+    Hand* h = new Hand();
+    Player p("Brandon", h);
+
+    p.addForceDraws(2);
+    p.addForceDraws(4);
+
+    ASSERT_EQ(p.getForceDraws(), 6);
+
+    p.addForceDraws(-6);
+
+    ASSERT_EQ(p.getForceDraws(), 0);
 }
 
 
