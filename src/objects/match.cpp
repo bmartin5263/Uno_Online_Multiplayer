@@ -9,7 +9,7 @@ Match::Match(std::vector<std::unique_ptr<Player>> &players, Deck *deck, Deck *pi
 {
     for (auto it = players.begin(); it != players.end(); it++) {
         Player* x = it->get();
-        this->players.push_back(std::unique_ptr<Player>(x));
+        this->players.push_back(std::unique_ptr<Player>(new Player(*x)));
     }
 }
 

@@ -13,7 +13,7 @@ Hand::Hand(const Hand &other) :
 {
 }
 
-Hand & Hand::operator = (const Hand &other)
+Hand & Hand::operator = (const Hand& other)
 {
     if (this != &other) {
         this->hand = other.hand;
@@ -22,7 +22,7 @@ Hand & Hand::operator = (const Hand &other)
     return *this;
 }
 
-void Hand::addCard(Card &card) {
+void Hand::addCard(Card& card) {
     hand.push_back(card);
 }
 

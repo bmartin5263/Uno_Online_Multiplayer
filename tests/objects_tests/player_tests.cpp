@@ -66,7 +66,8 @@ TEST(player_tests, copy_player) {
     Hand* h1 = new Hand();
     Player p("Brandon", h1);
 
-    { // Enforce Scoping
+    {
+        // Enforce Scoping
         Card c1(CardColors::BLUE, CardValues::ONE, false);
         Card c2(CardColors::RED, CardValues::TWO, false);
         Card c3(CardColors::GREEN, CardValues::THREE, false);

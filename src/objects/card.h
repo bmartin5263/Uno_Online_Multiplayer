@@ -16,6 +16,7 @@ public:
     Card(CardColors color, CardValues value, bool wild);
     Card(const Card &other);
     Card& operator = (const Card & other);
+    bool operator == (const Card & other) const;
     ~Card();
 
     CardColors getColor() const;

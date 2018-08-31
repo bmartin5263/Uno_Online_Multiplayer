@@ -58,6 +58,10 @@ Card & Card::operator = (const Card &other)
     return *this;
 }
 
+bool Card::operator == (const Card &other) const {
+    return color == other.color && value == other.value && wild == other.wild;
+}
+
 bool Card::isWild() const {
     return wild;
 }
