@@ -12,6 +12,7 @@ Player::Player(std::string name, Hand* hand) :
 Player::Player(const Player &other) :
     name(other.name), hand(std::unique_ptr<Hand>(new Hand)), points(other.points)
 {
+    // Copy over hand contents
     for (auto it = other.hand->begin(); it != other.hand->end(); it++) {
         hand->addCard(*it);
     }
@@ -24,6 +25,7 @@ Player & Player::operator = (const Player &other)
         this->hand = std::unique_ptr<Hand>(new Hand);
         this->points = other.points;
 
+        // Copy over hand contents
         for (auto it = other.hand->begin(); it != other.hand->end(); it++) {
             hand->addCard(*it);
         }

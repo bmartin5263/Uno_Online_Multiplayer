@@ -4,30 +4,54 @@
 
 #include "match.h"
 
-Match::Match(std::vector<Player> players, std::shared_ptr<Deck> deck, std::shared_ptr<Deck> pile) :
-    players(players), deck(deck), pile(pile)
+Match::Match(std::vector<std::unique_ptr<Player>> &players, Deck *deck, Deck *pile) :
+    deck(deck), pile(pile), turn(0), complete(false), abort(false), reverse(false)
 {
+    for (auto it = players.begin(); it != players.end(); it++) {
+        Player* x = it->get();
+        this->players.push_back(std::unique_ptr<Player>(x));
+    }
 }
 
-std::shared_ptr<Deck> Match::getDeck() {
-    return deck;
+Deck* Match::getDeck() {
+    return deck.get();
 }
 
-std::shared_ptr<Deck> Match::getPile() {
-    return pile;
+Deck* Match::getPile() {
+    return pile.get();
 }
 
-std::vector<Player> Match::getPlayers() {
+bool Match::isAborted() {
+    return abort;
+}
+
+bool Match::isComplete() {
+    return complete;
+}
+
+bool Match::isReversed() {
+    return reverse;
+}
+
+int Match::getTurn() {
+    return turn;
+}
+
+std::vector<std::unique_ptr<Player>> const & Match::getPlayers() {
     return players;
+}
+
+Player* Match::getPlayer(int playerId) {
+    return players[playerId].get();
 }
 
 void Match::drawCard(int playerId) {
     Card card = deck->popCard();
-    players[playerId].getHand()->addCard(card);
+    players[playerId]->getHand()->addCard(card);
 }
 
 void Match::playCard(int playerId, unsigned long cardIndex) {
-    Card card = players[playerId].getHand()->removeCard(cardIndex);
+    Card card = players[playerId]->getHand()->removeCard(cardIndex);
     pile->pushCard(card);
 }
 
@@ -50,4 +74,8 @@ void Match::nextTurn() {
 
 void Match::resolveCard() {
     Card card = pile->peekCard();
+}
+
+Match::~Match() {
+    // Nothing
 }

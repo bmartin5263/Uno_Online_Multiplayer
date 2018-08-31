@@ -19,24 +19,31 @@ class Match {
 
 public:
 
-    Match(std::vector<Player> players, std::shared_ptr<Deck> deck, std::shared_ptr<Deck> pile);
-    //~Match();
+    Match(std::vector<std::unique_ptr<Player>> & players, Deck* deck, Deck* pile);
+//    Match(const Match &other);
+//    Match& operator= (const Match &other);
+    ~Match();
 
     void drawCard(int playerId);
     void playCard(int playerId, unsigned long cardIndex);
 
-    std::shared_ptr<Deck> getDeck();
-    std::shared_ptr<Deck> getPile();
-    std::vector<Player> getPlayers();
+    Deck* getDeck();
+    Deck* getPile();
+    std::vector<std::unique_ptr<Player>> const & getPlayers();
+    Player* getPlayer(int playerId);
+    int getTurn();
+    bool isReversed();
+    bool isComplete();
+    bool isAborted();
 
 private:
 
     void nextTurn();
     void resolveCard();
 
-    std::vector<Player> players;
-    std::shared_ptr<Deck> deck;
-    std::shared_ptr<Deck> pile;
+    std::vector<std::unique_ptr<Player>> players;
+    std::unique_ptr<Deck> deck;
+    std::unique_ptr<Deck> pile;
     int turn;
     bool reverse;
     bool complete;
