@@ -20,7 +20,7 @@ TEST(hand_tests, add_single_card_to_hand) {
     ASSERT_EQ(h.size(), 0);
     ASSERT_EQ(h.empty(), true);
 
-    Card c(CardColors::BLUE, CardValues::ONE, false);
+    Card c(CardColors::BLUE, CardValues::ONE);
     h.addCard(c);
 
     ASSERT_EQ(h.size(), 1);
@@ -39,7 +39,7 @@ TEST(hand_tests, pop_single_card) {
     ASSERT_EQ(h.size(), 0);
     ASSERT_EQ(h.empty(), true);
 
-    Card c(CardColors::BLUE, CardValues::ONE, false);
+    Card c(CardColors::BLUE, CardValues::ONE);
     h.addCard(c);
 
     ASSERT_EQ(h.size(), 1);
@@ -60,9 +60,9 @@ TEST(hand_tests, add_multiple_cards_to_hand) {
     ASSERT_EQ(h.size(), 0);
     ASSERT_EQ(h.empty(), true);
 
-    Card c1(CardColors::BLUE, CardValues::ONE, false);
-    Card c2(CardColors::RED, CardValues::TWO, false);
-    Card c3(CardColors::GREEN, CardValues::THREE, false);
+    Card c1(CardColors::BLUE, CardValues::ONE);
+    Card c2(CardColors::RED, CardValues::TWO);
+    Card c3(CardColors::GREEN, CardValues::THREE);
     h.addCard(c1);
     h.addCard(c2);
     h.addCard(c3);
@@ -93,9 +93,9 @@ TEST(hand_tests, remove_card_from_middle) {
     ASSERT_EQ(h.size(), 0);
     ASSERT_EQ(h.empty(), true);
 
-    Card c1(CardColors::BLUE, CardValues::ONE, false);
-    Card c2(CardColors::RED, CardValues::TWO, false);
-    Card c3(CardColors::GREEN, CardValues::THREE, false);
+    Card c1(CardColors::BLUE, CardValues::ONE);
+    Card c2(CardColors::RED, CardValues::TWO);
+    Card c3(CardColors::GREEN, CardValues::THREE);
     h.addCard(c1);
     h.addCard(c2);
     h.addCard(c3);

@@ -50,19 +50,14 @@ bool Deck::empty() {
     return deck.empty();
 }
 
-std::vector<Card>::iterator Deck::begin() {
-    return deck.begin();
-}
-
-std::vector<Card>::iterator Deck::end() {
-    return deck.end();
-}
-
 /*
  * Change the Card at the top of the stack. For use with wild color changes.
  */
-void Deck::exchangeTopCard(Card &card) {
-    deck[0] = card;
+void Deck::exchangeTopCard(Card& card) {
+    if (deck.size() < 1) {
+        throw std::underflow_error("Cannot change top card color of empty deck");
+    }
+    deck[size()-1] = card;
 }
 
 Deck::~Deck() {

@@ -50,9 +50,9 @@ TEST(player_tests, add_cards_to_hand) {
     Player p("Brandon", h);
 
     { // Enforce Scoping
-        Card c1(CardColors::BLUE, CardValues::ONE, false);
-        Card c2(CardColors::RED, CardValues::TWO, false);
-        Card c3(CardColors::GREEN, CardValues::THREE, false);
+        Card c1(CardColors::BLUE, CardValues::ONE);
+        Card c2(CardColors::RED, CardValues::TWO);
+        Card c3(CardColors::GREEN, CardValues::THREE);
 
         p.getHand()->addCard(c1);
         p.getHand()->addCard(c2);
@@ -83,9 +83,9 @@ TEST(player_tests, copy_player) {
 
     {
         // Enforce Scoping
-        Card c1(CardColors::BLUE, CardValues::ONE, false);
-        Card c2(CardColors::RED, CardValues::TWO, false);
-        Card c3(CardColors::GREEN, CardValues::THREE, false);
+        Card c1(CardColors::BLUE, CardValues::ONE);
+        Card c2(CardColors::RED, CardValues::TWO);
+        Card c3(CardColors::GREEN, CardValues::THREE);
 
         p.getHand()->addCard(c1);
         p.getHand()->addCard(c2);

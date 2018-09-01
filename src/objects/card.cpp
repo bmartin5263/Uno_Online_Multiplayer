@@ -37,9 +37,12 @@ int Card::getPointValue(const Card &card) {
     }
 }
 
-Card::Card(CardColors color, CardValues value, bool wild) :
-    color(color), value(value), wild(wild)
+Card::Card(CardColors color, CardValues value) :
+    color(color), value(value), wild(false)
 {
+    if (color == CardColors::WILD) {
+        wild = true;
+    }
 }
 
 Card::Card(const Card &other) :

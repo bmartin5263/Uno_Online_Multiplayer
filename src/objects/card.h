@@ -13,7 +13,7 @@ public:
 
     static int getPointValue(const Card& card);
 
-    Card(CardColors color, CardValues value, bool wild);
+    Card(CardColors color, CardValues value);
     Card(const Card &other);
     Card& operator = (const Card & other);
     bool operator == (const Card & other) const;

@@ -7,6 +7,9 @@
 Match::Match(std::vector<std::unique_ptr<Player>> &players, Deck *deck, Deck *pile) :
     deck(deck), pile(pile), turn(0), complete(false), abort(false), reverse(false)
 {
+//    if (players.size() < MINIMUM_PLAYERS) {
+//        throw std::length_error("Match initialized with less than two players");
+//    }
     for (auto it = players.begin(); it != players.end(); it++) {
         Player* x = it->get();
         this->players.push_back(std::unique_ptr<Player>(new Player(*x)));
@@ -45,13 +48,22 @@ Player* Match::getPlayer(int playerId) {
     return players[playerId].get();
 }
 
-void Match::drawCard(int playerId) {
+void Match::drawCard() {
+    if (deck->size() == 0) {
+        throw std::logic_error("Cannot draw from an empty deck");
+    }
     Card card = deck->popCard();
-    players[playerId]->getHand()->addCard(card);
+    players[turn]->getHand()->addCard(card);
+    if (players[turn]->getForceDraws() > 0) {
+        players[turn]->addForceDraws(-1);
+    }
 }
 
-void Match::playCard(int playerId, unsigned long cardIndex) {
-    Card card = players[playerId]->getHand()->removeCard(cardIndex);
+void Match::playCard(unsigned long cardIndex) {
+    if (players[turn]->getForceDraws() > 0) {
+        throw std::logic_error("Cannot Play A Card When You Must Draw");
+    }
+    Card card = players[turn]->getHand()->removeCard(cardIndex);
     pile->pushCard(card);
     resolveCard();
 }
@@ -107,12 +119,20 @@ bool Match::isWild() {
 
 void Match::setWildColor(CardColors color) {
     Card topCard = pile->peekCard();
-    Card newCard(color, topCard.getValue(), false);
+    if (!topCard.isWild()) {
+        throw std::logic_error("Cannot change the color of a non-wild card");
+    }
+    Card newCard(color, topCard.getValue());
     pile->exchangeTopCard(newCard);
 }
 
 void Match::setTurn(int turn) {
     this->turn = turn;
+}
+
+void Match::setFirstPileCard() {
+    Card card = deck->popCard();
+    pile->pushCard(card);
 }
 
 Match::~Match() {

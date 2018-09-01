@@ -24,10 +24,11 @@ public:
 //    Match& operator= (const Match &other);
     ~Match();
 
-    void drawCard(int playerId);
-    void playCard(int playerId, unsigned long cardIndex);
+    void drawCard();
+    void playCard(unsigned long cardIndex);
     void setWildColor(CardColors color);
     void setTurn(int turn);
+    void setFirstPileCard();
 
     Deck* getDeck();
     Deck* getPile();

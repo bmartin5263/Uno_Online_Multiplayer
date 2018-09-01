@@ -17,7 +17,7 @@ TEST(deck_tests, create_deck) {
 
 TEST(deck_tests, push_single_card) {
     Deck d;
-    Card c(CardColors::BLUE, CardValues::ONE, false);
+    Card c(CardColors::BLUE, CardValues::ONE);
     d.pushCard(c);
 
     ASSERT_EQ(d.size(), 1);
@@ -36,9 +36,9 @@ TEST(deck_tests, push_single_card) {
 
 TEST(deck_tests, push_multiple_cards) {
     Deck d;
-    Card c1(CardColors::BLUE, CardValues::ONE, false);
-    Card c2(CardColors::RED, CardValues::TWO, false);
-    Card c3(CardColors::GREEN, CardValues::THREE, false);
+    Card c1(CardColors::BLUE, CardValues::ONE);
+    Card c2(CardColors::RED, CardValues::TWO);
+    Card c3(CardColors::GREEN, CardValues::THREE);
     d.pushCard(c1);
     d.pushCard(c2);
     d.pushCard(c3);
@@ -62,9 +62,9 @@ TEST(deck_tests, push_multiple_cards) {
 
 TEST(deck_tests, deck_copy) {
     Deck d;
-    Card c1(CardColors::BLUE, CardValues::ONE, false);
-    Card c2(CardColors::RED, CardValues::TWO, false);
-    Card c3(CardColors::GREEN, CardValues::THREE, false);
+    Card c1(CardColors::BLUE, CardValues::ONE);
+    Card c2(CardColors::RED, CardValues::TWO);
+    Card c3(CardColors::GREEN, CardValues::THREE);
     d.pushCard(c1);
     d.pushCard(c2);
     d.pushCard(c3);

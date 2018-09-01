@@ -27,10 +27,16 @@ void Hand::addCard(Card& card) {
 }
 
 Card Hand::getCard(unsigned long index) {
+    if (index >= hand.size()) {
+        throw std::out_of_range("Card index out of range of hand");
+    }
     return hand[index];
 }
 
 Card Hand::removeCard(unsigned long index) {
+    if (index >= hand.size()) {
+        throw std::out_of_range("Card index out of range of hand");
+    }
     Card card = hand.at(index);
     hand.erase(hand.begin()+index);
     return card;
