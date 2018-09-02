@@ -58,6 +58,15 @@ std::vector<Card>::iterator Hand::end() {
     return hand.end();
 }
 
+bool Hand::hasPlayableCard(CardColors color, CardValues value) {
+    for (auto it = begin(); it != end(); it++) {
+        if (it->getColor() == color || it->getValue() == value || it->getColor() == CardColors::WILD) {
+            return true;
+        }
+    }
+    return false;
+}
+
 Hand::~Hand() {
     // Do Nothing
 }

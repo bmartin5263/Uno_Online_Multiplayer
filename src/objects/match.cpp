@@ -5,7 +5,7 @@
 #include "match.h"
 
 Match::Match(std::vector<std::unique_ptr<Player>> &players, Deck *deck, Deck *pile) :
-    deck(deck), pile(pile), turn(0), complete(false), abort(false), reverse(false)
+    deck(deck), pile(pile), turn(0), consecutivePasses(0), complete(false), abort(false), reverse(false)
 {
 //    if (players.size() < MINIMUM_PLAYERS) {
 //        throw std::length_error("Match initialized with less than two players");
@@ -65,6 +65,7 @@ void Match::playCard(unsigned long cardIndex) {
     }
     Card card = players[turn]->getHand()->removeCard(cardIndex);
     pile->pushCard(card);
+    consecutivePasses = 0; // reset passes
     resolveCard();
 }
 
@@ -119,7 +120,7 @@ bool Match::isWild() {
 
 void Match::setWildColor(CardColors color) {
     Card topCard = pile->peekCard();
-    if (!topCard.isWild()) {
+    if (!topCard.isWild() && consecutivePasses != players.size()) {
         throw std::logic_error("Cannot change the color of a non-wild card");
     }
     Card newCard(color, topCard.getValue());
@@ -130,9 +131,34 @@ void Match::setTurn(int turn) {
     this->turn = turn;
 }
 
-void Match::setFirstPileCard() {
+void Match::pushFirstPileCard() {
     Card card = deck->popCard();
     pile->pushCard(card);
+}
+
+void Match::pass() {
+    if (deck->size() > 0) {
+        throw std::length_error("Cannot pass while deck is non-empty");
+    }
+    Card topCard = pile->peekCard();
+    if (players[turn]->getHand()->hasPlayableCard(topCard.getColor(), topCard.getValue())) {
+        throw std::logic_error("Cannot pass with a playable card");
+    }
+    consecutivePasses++;
+    if (consecutivePasses == players.size()) {
+        randomlyChangeTopColor();
+        consecutivePasses = 0;
+    }
+}
+
+void Match::randomlyChangeTopColor() {
+    CardColors newColor;
+    do {
+        double x = rand()/static_cast<double>(RAND_MAX+1);
+        int val = static_cast<int>(x * 3);
+        newColor = CARD_COLORS[val];
+    } while (newColor == pile->peekCard().getColor());
+    setWildColor(newColor);
 }
 
 Match::~Match() {

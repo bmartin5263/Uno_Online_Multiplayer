@@ -339,7 +339,7 @@ TEST(match_tests, play_plus_4_card) {
 
 }
 
-TEST(match_tests, play_match_stress_test) {
+TEST(match_tests, play_match_few_turns) {
     Deck* deck = new Deck();
     Deck* pile = new Deck();
 
@@ -394,7 +394,7 @@ TEST(match_tests, play_match_stress_test) {
     players.push_back(std::move(p4));
 
     Match m(players, deck, pile);
-    m.setFirstPileCard();
+    m.pushFirstPileCard();
     Card topPile(CardColors::BLUE, CardValues::ONE);
 
     ASSERT_EQ(m.getPile()->peekCard(), topPile);
@@ -428,4 +428,62 @@ TEST(match_tests, play_match_stress_test) {
     ASSERT_EQ(m.getPile()->peekCard().getColor(), CardColors::RED);
     ASSERT_EQ(m.getPile()->size(), 5);
 
+}
+
+TEST(match_tests, pass_turn) {
+    Deck* deck = new Deck();
+    Deck* pile = new Deck();
+    Card c1(CardColors::BLUE, CardValues::THREE);
+    Card c2(CardColors::BLUE, CardValues::TWO);
+    deck->pushCard(c1);
+    deck->pushCard(c2);
+
+    Hand* h1 = new Hand();
+    Hand* h2 = new Hand();
+    Card c3(CardColors::BLUE, CardValues::SEVEN);
+    Card c4(CardColors::YELLOW, CardValues::FOUR);
+    Card c5(CardColors::YELLOW, CardValues::FIVE);
+    h1->addCard(c3);
+    h2->addCard(c4);
+    h1->addCard(c5);
+
+    std::vector<std::unique_ptr<Player>> players;
+    std::unique_ptr<Player> p1(new Player("Brandon", h1));
+    std::unique_ptr<Player> p2(new Player("Mark", h2));
+
+    players.push_back(std::move(p1));
+    players.push_back(std::move(p2));
+
+    Match m(players, deck, pile);
+    m.pushFirstPileCard();
+    m.setTurn(0);
+
+    try {
+        m.pass();
+        FAIL();
+    } catch (std::length_error const & err) {
+        // good
+    }
+
+    m.playCard(0);
+    m.drawCard();
+    try {
+        m.pass();
+        FAIL();
+    } catch (std::logic_error const & err) {
+        // good
+    }
+    m.playCard(1);
+
+    ASSERT_EQ(m.getTurn(), 0);
+
+    CardColors colorToPass = m.getPile()->peekCard().getColor();
+    ASSERT_EQ(colorToPass, CardColors::BLUE);
+
+    m.pass();
+    m.pass();
+
+    // Automatically change the color when everyone passes
+    CardColors newColor = m.getPile()->peekCard().getColor();
+    ASSERT_NE(colorToPass, newColor);
 }

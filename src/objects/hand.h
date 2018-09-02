@@ -19,8 +19,8 @@ public:
 
     Card getCard(unsigned long index);
     Card removeCard(unsigned long index);
-
     void addCard(Card& card);
+    bool hasPlayableCard(CardColors color, CardValues value);
 
     std::vector<Card>::iterator begin();
     std::vector<Card>::iterator end();
