@@ -28,15 +28,15 @@ public:
     void playCard(unsigned long cardIndex);
     void pass();
     void setWildColor(CardColors color);
-    void setTurn(int turn);
-    void pushFirstPileCard();
+    void setTurn(unsigned int turn);
+    void start();
 
     // Accessors
     Deck* getDeck();
     Deck* getPile();
     std::vector<std::unique_ptr<Player>> const & getPlayers();
     Player* getPlayer(int playerId);
-    int getTurn();
+    unsigned int getTurn();
     bool isReversed();
     bool isComplete();
     bool isAborted();
@@ -48,10 +48,13 @@ private:
     void resolveCard();
     void randomlyChangeTopColor();
 
+    /* Explicit Arguments */
+    void setTurn(unsigned long turn) = delete;
+
     std::vector<std::unique_ptr<Player>> players;
     std::unique_ptr<Deck> deck;
     std::unique_ptr<Deck> pile;
-    int turn;
+    unsigned int turn;
     int consecutivePasses;
     bool reverse;
     bool complete;

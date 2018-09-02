@@ -36,7 +36,7 @@ bool Match::isReversed() {
     return reverse;
 }
 
-int Match::getTurn() {
+unsigned int Match::getTurn() {
     return turn;
 }
 
@@ -50,7 +50,7 @@ Player* Match::getPlayer(int playerId) {
 
 void Match::drawCard() {
     if (deck->size() == 0) {
-        throw std::logic_error("Cannot draw from an empty deck");
+        throw std::length_error("Cannot draw from an empty deck");
     }
     Card card = deck->popCard();
     players[turn]->getHand()->addCard(card);
@@ -63,6 +63,12 @@ void Match::playCard(unsigned long cardIndex) {
     if (players[turn]->getForceDraws() > 0) {
         throw std::logic_error("Cannot Play A Card When You Must Draw");
     }
+    Card peekCard = players[turn]->getHand()->getCard(cardIndex);
+    Card topCard = pile->peekCard();
+    if (peekCard.getValue() != topCard.getValue() && peekCard.getColor() != topCard.getColor()
+        && !peekCard.isWild()) {
+        throw std::logic_error("Cannot Play A Non-Wild Card That Doesn't Match The Pile's Color or Value");
+    }
     Card card = players[turn]->getHand()->removeCard(cardIndex);
     pile->pushCard(card);
     consecutivePasses = 0; // reset passes
@@ -70,18 +76,18 @@ void Match::playCard(unsigned long cardIndex) {
 }
 
 void Match::nextTurn() {
-    unsigned long playersLen = players.size();
+    unsigned int playersLen = (unsigned int)players.size();
     if (reverse) {
         if (turn == 0) {
-            turn = (int)playersLen - 1;
+            setTurn(playersLen - 1);
         } else {
-            turn -= 1;
+            setTurn(turn - 1);
         }
     } else {
         if (turn == playersLen - 1) {
-            turn = 0;
+            setTurn((unsigned int)0);
         } else {
-            turn += 1;
+            setTurn(turn + 1);
         }
     }
 }
@@ -127,13 +133,31 @@ void Match::setWildColor(CardColors color) {
     pile->exchangeTopCard(newCard);
 }
 
-void Match::setTurn(int turn) {
+/*
+ *  Testing function for force-setting the turn, should not be used in game logic, turns
+ *  are automatically changed after playing the proper card.
+ */
+void Match::setTurn(unsigned int turn) {
+    if (turn >= players.size()) {
+        throw std::length_error("Turn number is greater than the number of players");
+    }
     this->turn = turn;
 }
 
-void Match::pushFirstPileCard() {
+/*
+ *  Takes top card from the deck and adds it to the pile to start the game. Chooses random
+ *  player for first turn
+ */
+void Match::start() {
+    if (deck->size() < 1) {
+        throw std::length_error("Illegal deck state, cannot start game with an empty deck");
+    }
+    if (pile->size() > 0) {
+        throw std::logic_error("Illegal pile state, cannot start game with a non-empty pile");
+    }
     Card card = deck->popCard();
     pile->pushCard(card);
+    turn = (unsigned int)rand() % 4;
 }
 
 void Match::pass() {
@@ -154,8 +178,7 @@ void Match::pass() {
 void Match::randomlyChangeTopColor() {
     CardColors newColor;
     do {
-        double x = rand()/static_cast<double>(RAND_MAX+1);
-        int val = static_cast<int>(x * 3);
+        int val = rand() % 4;
         newColor = CARD_COLORS[val];
     } while (newColor == pile->peekCard().getColor());
     setWildColor(newColor);

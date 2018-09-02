@@ -43,6 +43,8 @@ void stressTestDeck(Deck& deck) {
 TEST(match_tests, create_match) {
     Deck* deck = new Deck();
     Deck* pile = new Deck();
+    Card c(CardColors::BLUE, CardValues::ONE);
+    deck->pushCard(c);
 
     std::vector<std::unique_ptr<Player>> players;
 
@@ -51,7 +53,7 @@ TEST(match_tests, create_match) {
 
         ASSERT_EQ(m.getPlayers().size(), 0);
         ASSERT_EQ(m.getPile()->size(), 0);
-        ASSERT_EQ(m.getDeck()->size(), 0);
+        ASSERT_EQ(m.getDeck()->size(), 1);
         ASSERT_EQ(m.getTurn(), 0);
         ASSERT_EQ(m.isReversed(), false);
         ASSERT_EQ(m.isComplete(), false);
@@ -62,6 +64,8 @@ TEST(match_tests, create_match) {
 
 TEST(match_tests, create_match_with_players) {
     Deck* deck = new Deck();
+    Card c(CardColors::BLUE, CardValues::ONE);
+    deck->pushCard(c);
     Deck* pile = new Deck();
     Hand* h1 = new Hand();
     Hand* h2 = new Hand();
@@ -107,11 +111,11 @@ TEST(match_tests, draw_cards_from_deck) {
     {
 
         Match m(players, deck, pile);
-        m.setTurn(0);
+        m.setTurn((unsigned int)0);
         Card topCard = m.getDeck()->peekCard();
 
         m.drawCard();
-        m.setTurn(1);
+        m.setTurn((unsigned int)1);
 
         ASSERT_EQ(m.getDeck()->size(), 107);
         ASSERT_EQ(m.getPlayer(0)->getHand()->size(), 1);
@@ -125,6 +129,20 @@ TEST(match_tests, draw_cards_from_deck) {
         ASSERT_EQ(m.getDeck()->size(), 106);
         ASSERT_EQ(m.getPlayer(1)->getHand()->size(), 1);
         ASSERT_EQ(m.getPlayer(1)->getHand()->getCard(0), topCard2);
+
+        // Draw Rest
+        for (int i = 0; i < 106; i++) {
+            m.drawCard();
+        }
+
+        try {
+            m.drawCard();
+            FAIL();
+        } catch (std::length_error const & err) {
+            // Good
+        }
+        ASSERT_EQ(m.getPlayer(1)->getHand()->size(), 107);
+
     }
 
     ASSERT_EQ(h1->size(), 0);
@@ -135,10 +153,15 @@ TEST(match_tests, play_normal_card_from_hand) {
     Deck* deck = new Deck();
     Deck* pile = new Deck();
 
+    Card initialPileCard(CardColors::RED, CardValues::ONE);
+    pile->pushCard(initialPileCard);
+
     Hand* h1 = new Hand();
     Hand* h2 = new Hand();
     Card c(CardColors::BLUE, CardValues::ONE);
+    Card badCard(CardColors::YELLOW, CardValues::THREE);
     h1->addCard(c);
+    h2->addCard(badCard);
 
     std::vector<std::unique_ptr<Player>> players;
     std::unique_ptr<Player> p1(new Player("Brandon", h1));
@@ -153,15 +176,25 @@ TEST(match_tests, play_normal_card_from_hand) {
 
     ASSERT_EQ(m.isWild(), false);
     ASSERT_EQ(m.getPile()->peekCard(), c);
-    ASSERT_EQ(m.getPile()->size(), 1);
+    ASSERT_EQ(m.getPile()->size(), 2);
     ASSERT_EQ(m.getPlayer(0)->getHand()->size(), 0);
     ASSERT_EQ(m.getTurn(), 1);
+
+    try {
+        m.playCard(0);
+        FAIL();
+    } catch (std::logic_error const & err) {
+        // Good
+    }
 
 }
 
 TEST(match_tests, play_wild_card_from_hand) {
     Deck* deck = new Deck();
     Deck* pile = new Deck();
+
+    Card initialPileCard(CardColors::RED, CardValues::ONE);
+    pile->pushCard(initialPileCard);
 
     Hand* h1 = new Hand();
     Card c(CardColors::WILD, CardValues::WILD);
@@ -183,13 +216,16 @@ TEST(match_tests, play_wild_card_from_hand) {
 
     ASSERT_EQ(m.isWild(), false);
     ASSERT_EQ(m.getPile()->peekCard(), newCard);
-    ASSERT_EQ(m.getPile()->size(), 1);
+    ASSERT_EQ(m.getPile()->size(), 2);
 
 }
 
 TEST(match_tests, play_skip_card_from_hand) {
     Deck* deck = new Deck();
     Deck* pile = new Deck();
+
+    Card initialPileCard(CardColors::YELLOW, CardValues::ONE);
+    pile->pushCard(initialPileCard);
 
     Hand* h1 = new Hand();
     Hand* h2 = new Hand();
@@ -220,6 +256,9 @@ TEST(match_tests, play_reverse_card_with_two_players) {
     Deck* deck = new Deck();
     Deck* pile = new Deck();
 
+    Card initialPileCard(CardColors::GREEN, CardValues::ONE);
+    pile->pushCard(initialPileCard);
+
     Hand* h1 = new Hand();
     Hand* h2 = new Hand();
 
@@ -238,7 +277,7 @@ TEST(match_tests, play_reverse_card_with_two_players) {
     players.push_back(std::move(p2));
 
     Match m(players, deck, pile);
-    m.setTurn(1);
+    m.setTurn((unsigned int)1);
 
     m.playCard(2);
 
@@ -250,6 +289,9 @@ TEST(match_tests, play_reverse_card_with_two_players) {
 TEST(match_tests, play_reverse_card_with_three_players) {
     Deck* deck = new Deck();
     Deck* pile = new Deck();
+
+    Card initialPileCard(CardColors::YELLOW, CardValues::REVERSE);
+    pile->pushCard(initialPileCard);
 
     Hand* h1 = new Hand();
     Hand* h2 = new Hand();
@@ -271,7 +313,7 @@ TEST(match_tests, play_reverse_card_with_three_players) {
     players.push_back(std::move(p3));
 
     Match m(players, deck, pile);
-    m.setTurn(1);
+    m.setTurn((unsigned int)1);
 
     m.playCard(2);
 
@@ -283,6 +325,9 @@ TEST(match_tests, play_reverse_card_with_three_players) {
 TEST(match_tests, play_plus_2_card) {
     Deck* deck = new Deck();
     Deck* pile = new Deck();
+
+    Card initialPileCard(CardColors::BLUE, CardValues::ONE);
+    pile->pushCard(initialPileCard);
 
     Hand* h1 = new Hand();
     Hand* h2 = new Hand();
@@ -312,6 +357,9 @@ TEST(match_tests, play_plus_2_card) {
 TEST(match_tests, play_plus_4_card) {
     Deck* deck = new Deck();
     Deck* pile = new Deck();
+
+    Card initialPileCard(CardColors::RED, CardValues::ONE);
+    pile->pushCard(initialPileCard);
 
     Hand* h1 = new Hand();
     Hand* h2 = new Hand();
@@ -394,7 +442,8 @@ TEST(match_tests, play_match_few_turns) {
     players.push_back(std::move(p4));
 
     Match m(players, deck, pile);
-    m.pushFirstPileCard();
+    m.start();
+    m.setTurn((unsigned int)0);
     Card topPile(CardColors::BLUE, CardValues::ONE);
 
     ASSERT_EQ(m.getPile()->peekCard(), topPile);
@@ -455,8 +504,8 @@ TEST(match_tests, pass_turn) {
     players.push_back(std::move(p2));
 
     Match m(players, deck, pile);
-    m.pushFirstPileCard();
-    m.setTurn(0);
+    m.start();
+    m.setTurn((unsigned int)0);
 
     try {
         m.pass();
