@@ -15,6 +15,7 @@ enum class CardValues {
 };
 
 const static int MINIMUM_PLAYERS = 2;
+const static int MAXIMUM_PLAYERS = 4;
 
 static CardColors CARD_COLORS[4] = {CardColors::BLUE, CardColors::RED, CardColors::GREEN, CardColors::YELLOW};
 static CardValues CARD_VALUES[15] = {CardValues::ONE, CardValues::TWO, CardValues::THREE, CardValues::FOUR, CardValues::FIVE,

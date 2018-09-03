@@ -45,6 +45,9 @@ std::vector<std::unique_ptr<Player>> const & Match::getPlayers() {
 }
 
 Player* Match::getPlayer(int playerId) {
+    if (playerId >= players.size()) {
+        throw std::length_error("Invalid playerId for Match");
+    }
     return players[playerId].get();
 }
 

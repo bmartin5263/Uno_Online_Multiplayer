@@ -48,7 +48,7 @@ private:
     void resolveCard();
     void randomlyChangeTopColor();
 
-    /* Explicit Arguments */
+    /* Implicit Prevention */
     void setTurn(unsigned long turn) = delete;
 
     std::vector<std::unique_ptr<Player>> players;
